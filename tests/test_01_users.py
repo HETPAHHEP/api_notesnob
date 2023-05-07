@@ -1,289 +1,554 @@
+from http import HTTPStatus
+
 import pytest
-from django.contrib.auth import get_user_model
 
-from .common import create_users_api, auth_client
+from tests.utils import (check_pagination,
+                         invalid_data_for_user_patch_and_creation)
 
 
+@pytest.mark.django_db(transaction=True)
 class Test01UserAPI:
 
-    @pytest.mark.django_db(transaction=True)
-    def test_01_users_not_auth(self, client):
+    VALID_DATA_FOR_USER_CREATION = [
+        (
+            {
+                'username': 'TestUser_2',
+                'role': 'user',
+                'email': 'testuser2@yamdb.fake'
+            },
+            ''
+        ),
+        (
+            {
+                'username': 'TestUser_3',
+                'email': 'testuser3@yamdb.fake'
+            },
+            'без указания роли нового пользователя '
+        )
+    ]
+    PATCH_DATA = {
+        'first_name': 'New User Firstname',
+        'last_name': 'New User Lastname',
+        'bio': 'new user bio'
+    }
+
+    def test_01_users_not_authenticated(self, client):
         response = client.get('/api/v1/users/')
 
-        assert response.status_code != 404, \
-            'Страница `/api/v1/users/` не найдена, проверьте этот адрес в *urls.py*'
+        assert response.status_code != HTTPStatus.NOT_FOUND, (
+            'Эндпоинт `/api/v1/users/` не найден. Проверьте настройки в '
+            '*urls.py*.'
+        )
 
-        assert response.status_code == 401, \
-            'Проверьте, что при GET запросе `/api/v1/users/` без токена авторизации возвращается статус 401'
+        assert response.status_code == HTTPStatus.UNAUTHORIZED, (
+            'Проверьте, что GET-запрос к `/api/v1/users/` без токена '
+            'авторизации возвращается ответ со статусом 401.'
+        )
 
-    @pytest.mark.django_db(transaction=True)
-    def test_02_users_username_not_auth(self, client, admin):
+    def test_02_users_username_not_authenticated(self, client, admin):
         response = client.get(f'/api/v1/users/{admin.username}/')
 
-        assert response.status_code != 404, \
-            'Страница `/api/v1/users/{username}/` не найдена, проверьте этот адрес в *urls.py*'
+        assert response.status_code != HTTPStatus.NOT_FOUND, (
+            'Эндпоинт `/api/v1/users/{username}/` не найден. Проверьте '
+            'настройки в *urls.py*.'
+        )
 
-        assert response.status_code == 401, \
-            'Проверьте, что при GET запросе `/api/v1/users/{username}/` без токена авторизации возвращается статус 401'
+        assert response.status_code == HTTPStatus.UNAUTHORIZED, (
+            'Проверьте, что GET-запрос `/api/v1/users/{username}/` без '
+            'токена авторизации возвращает ответ со статусом 401.'
+        )
 
-    @pytest.mark.django_db(transaction=True)
-    def test_03_users_me_not_auth(self, client):
-        response = client.get(f'/api/v1/users/me/')
+    def test_03_users_me_not_authenticated(self, client):
+        response = client.get('/api/v1/users/me/')
 
-        assert response.status_code != 404, \
-            'Страница `/api/v1/users/me/` не найдена, проверьте этот адрес в *urls.py*'
+        assert response.status_code != HTTPStatus.NOT_FOUND, (
+            'Эндпоинт `/api/v1/users/me/` не найден. Проверьте настройки '
+            'в *urls.py*.'
+        )
 
-        assert response.status_code == 401, \
-            'Проверьте, что при GET запросе `/api/v1/users/me/` без токена авторизации возвращается статус 401'
+        assert response.status_code == HTTPStatus.UNAUTHORIZED, (
+            'Проверьте, что GET-запрос `/api/v1/users/me/` без токена '
+            'авторизации возвращает ответ со статусом 401.'
+        )
 
-    @pytest.mark.django_db(transaction=True)
-    def test_04_users_get_auth(self, user_client, admin):
-        response = user_client.get('/api/v1/users/')
-        assert response.status_code != 404, \
-            'Страница `/api/v1/users/` не найдена, проверьте этот адрес в *urls.py*'
-        assert response.status_code == 200, \
-            'Проверьте, что при GET запросе `/api/v1/users/` с токеном авторизации возвращается статус 200'
+    def test_04_users_get_admin(self, admin_client, admin):
+        response = admin_client.get('/api/v1/users/')
+        assert response.status_code != HTTPStatus.NOT_FOUND, (
+            'Эндпоинт `/api/v1/users/` не найден. Проверьте настройки в '
+            '*urls.py*.'
+        )
+        assert response.status_code == HTTPStatus.OK, (
+            'Проверьте, что GET-запрос к `/api/v1/users/` с токеном '
+            'авторизации возвращает ответ со статусом 200.'
+        )
         data = response.json()
-        assert 'count' in data, \
-            'Проверьте, что при GET запросе `/api/v1/users/` возвращаете данные с пагинацией. ' \
-            'Не найден параметр `count`'
-        assert 'next' in data, \
-            'Проверьте, что при GET запросе `/api/v1/users/` возвращаете данные с пагинацией. ' \
-            'Не найден параметр `next`'
-        assert 'previous' in data, \
-            'Проверьте, что при GET запросе `/api/v1/users/` возвращаете данные с пагинацией. ' \
-            'Не найден параметр `previous`'
-        assert 'results' in data, \
-            'Проверьте, что при GET запросе `/api/v1/users/` возвращаете данные с пагинацией. ' \
-            'Не найден параметр `results`'
-        assert data['count'] == 1, \
-            'Проверьте, что при GET запросе `/api/v1/users/` возвращаете данные с пагинацией. ' \
-            'Значение параметра `count` не правильное'
-        assert type(data['results']) == list, \
-            'Проверьте, что при GET запросе `/api/v1/users/` возвращаете данные с пагинацией. ' \
-            'Тип параметра `results` должен быть список'
-        assert len(data['results']) == 1 and data['results'][0].get('username') == admin.username \
-            and data['results'][0].get('email') == admin.email, \
-            'Проверьте, что при GET запросе `/api/v1/users/` возвращаете данные с пагинацией. ' \
-            'Значение параметра `results` не правильное'
+        admin_data = {
+            'username': admin.username,
+            'email': admin.email,
+            'first_name': admin.first_name,
+            'last_name': admin.last_name,
+            'bio': admin.bio,
+            'role': admin.role
+        }
+        check_pagination('/api/v1/users/', data, 1, admin_data)
 
-    @pytest.mark.django_db(transaction=True)
-    def test_05_users_post_auth(self, user_client, admin):
-        data = {}
-        response = user_client.post('/api/v1/users/', data=data)
-        assert response.status_code == 400, \
-            'Проверьте, что при POST запросе `/api/v1/users/` с не правильными данными возвращает 400'
-        data = {
-            'username': 'TestUser1231231',
+    def test_04_02_users_get_search(self, user, admin_client,
+                                    admin, django_user_model):
+        url = '/api/v1/users/'
+        search_url = f'{url}?search={admin.username}'
+        response = admin_client.get(search_url)
+        assert response.status_code != HTTPStatus.NOT_FOUND, (
+            'Эндпоинт `/api/v1/users/?search={username}` не найден. '
+            'Проверьте настройки в *urls.py*.'
+        )
+        reponse_json = response.json()
+        assert ('results' in reponse_json
+                and isinstance(reponse_json.get('results'), list)), (
+            'Проверьте, что GET-запрос к `/api/v1/users/?search={username}` '
+            'возвращает результаты поиска по значению ключа `results` в виде '
+            'списка.'
+        )
+        users_count = (
+            django_user_model.objects.filter(username=admin.username).count()
+        )
+        assert len(reponse_json['results']) == users_count, (
+            'Проверьте, что GET-запрос к `/api/v1/users/?search={username}` '
+            'возвращает данные только тех пользователей, `username` которых '
+            'удовлетворяет условию поиска.'
+        )
+        admin_as_dict = {
+            'username': admin.username,
+            'email': admin.email,
+            'role': admin.role,
+            'first_name': admin.first_name,
+            'last_name': admin.last_name,
+            'bio': admin.bio
+        }
+        assert reponse_json['results'] == [admin_as_dict], (
+            'Проверьте, что ответ на GET-запрос к '
+            '`/api/v1/users/?search={username}` содержит полный перечень '
+            'данных пользователя. Ответ должен содержать следующие ключи с '
+            f'корректными данными: {", ".join(admin_as_dict.keys())}.'
+        )
+
+    def test_04_01_users_get_admin_only(self, user_client, moderator_client):
+        url = '/api/v1/users/'
+        for client in (user_client, moderator_client):
+            response = client.get(url)
+            assert response.status_code != HTTPStatus.NOT_FOUND, (
+                f'Эндпоинт `{url}` не найден. Проверьте настройки в '
+                '*urls.py*.'
+            )
+            assert response.status_code == HTTPStatus.FORBIDDEN, (
+                f'Проверьте, что GET-запрос к `{url}` от пользователя, не '
+                'являющегося администратором, возвращает ответ со статусом '
+                '403.'
+            )
+
+    def test_05_01_users_post_admin_bad_requests(self, admin_client, admin):
+        empty_data = {}
+        response = admin_client.post('/api/v1/users/', data=empty_data)
+        assert response.status_code == HTTPStatus.BAD_REQUEST, (
+            'Если POST-запрос администратора к `/api/v1/users/` '
+            'не содержит необходимых данных - должен вернуться ответ со '
+            'статусом 400.'
+        )
+
+        no_email_data = {
+            'username': 'TestUser_noemail',
             'role': 'user'
         }
-        response = user_client.post('/api/v1/users/', data=data)
-        assert response.status_code == 400, \
-            'Проверьте, что при POST запросе `/api/v1/users/` с не правильными данными возвращает 400'
-        data = {
-            'username': 'TestUser1231231',
+        response = admin_client.post('/api/v1/users/', data=no_email_data)
+        assert response.status_code == HTTPStatus.BAD_REQUEST, (
+            'Если POST-запрос администратора к `/api/v1/users/` '
+            'не содержит `email` - должен вернуться ответ со статусом 400.'
+        )
+
+        no_username_data = {
+            'email': 'valid_email@yamdb.fake',
+            'role': 'user'
+        }
+        response = admin_client.post('/api/v1/users/', data=no_username_data)
+        assert response.status_code == HTTPStatus.BAD_REQUEST, (
+            'Если POST-запрос администратора к `/api/v1/users/` '
+            ' не содержит `username` - должен вернуться ответ со статусом 400.'
+        )
+
+        duplicate_email = {
+            'username': 'TestUser_duplicate',
             'role': 'user',
             'email': admin.email
         }
-        response = user_client.post('/api/v1/users/', data=data)
-        assert response.status_code == 400, \
-            'Проверьте, что при POST запросе `/api/v1/users/` с не правильными данными возвращает 400. ' \
-            '`Email` должен быть уникальный у каждого прользователя'
-        data = {
+        response = admin_client.post('/api/v1/users/', data=duplicate_email)
+        assert response.status_code == HTTPStatus.BAD_REQUEST, (
+            'Если в POST-запросе администратора к `/api/v1/users/` '
+            'передан `email` существующего пользователя - '
+            'должен вернуться ответ со статусом 400.'
+        )
+
+        duplicate_username = {
             'username': admin.username,
             'role': 'user',
-            'email': 'testuser@yamdb.fake'
+            'email': 'valid_test_email@yamdb.fake'
         }
-        response = user_client.post('/api/v1/users/', data=data)
-        assert response.status_code == 400, \
-            'Проверьте, что при POST запросе `/api/v1/users/` с не правильными данными возвращает 400. ' \
-            '`Username` должен быть уникальный у каждого прользователя'
+        response = admin_client.post('/api/v1/users/', data=duplicate_username)
+        assert response.status_code == HTTPStatus.BAD_REQUEST, (
+            'Если в POST-запросе администратора к `/api/v1/users/` '
+            'передан `username` существующего пользователя '
+            'должен вернуться ответ со статусом 400.'
+        )
+
+    @pytest.mark.parametrize('data,msg_modifier', VALID_DATA_FOR_USER_CREATION)
+    def test_05_02_users_post_admin_user_creation(self, admin_client,
+                                                  data, msg_modifier,
+                                                  django_user_model):
+        response = admin_client.post('/api/v1/users/', data=data)
+        assert response.status_code == HTTPStatus.CREATED, (
+            'Если POST-запрос администратора к `/api/v1/users/` содержит '
+            f'корректные данные {msg_modifier}- должен вернуться ответ со '
+            'статусом 201.'
+        )
+        new_user = django_user_model.objects.filter(email=data['email'])
+        assert new_user.exists(), (
+            'Если POST-запрос администратора, отправленный к `/api/v1/users/`'
+            f', содержит корректные данные {msg_modifier}- должен быть создан '
+            'новый пользователь.'
+        )
+        if msg_modifier:
+            assert new_user.first().role == 'user', (
+                'Когда администратор создаёт пользователя через POST-запрос к '
+                '`/api/v1/users/` и не указывает роль для нового пользователя '
+                '- пользователю должна присваиваться роль `user`.'
+            )
+
+    def test_05_03_users_post_response_has_data(self, admin_client):
         data = {
-            'username': 'TestUser1231231',
-            'role': 'user',
-            'email': 'testuser@yamdb.fake'
-        }
-        response = user_client.post('/api/v1/users/', data=data)
-        assert response.status_code == 201, \
-            'Проверьте, что при POST запросе `/api/v1/users/` с правильными данными возвращает 201.'
-        data = {
-            'first_name': 'fsdfsdf',
-            'last_name': 'dsgdsfg',
-            'username': 'TestUser4534',
-            'bio': 'Jdlkjd',
+            'first_name': 'First Name',
+            'last_name': 'Last Name',
+            'username': 'test_username',
+            'bio': 'test bio',
             'role': 'moderator',
-            'email': 'testuser2342@yamdb.fake'
+            'email': 'testmoder2@yamdb.fake'
         }
-        response = user_client.post('/api/v1/users/', data=data)
-        assert response.status_code == 201, \
-            'Проверьте, что при POST запросе `/api/v1/users/` с правильными данными возвращает 201.'
+        response = admin_client.post('/api/v1/users/', data=data)
+        assert response.status_code == HTTPStatus.CREATED, (
+            'Если POST-запрос администратора к `/api/v1/users/` '
+            'содержит корректные данные - должен вернуться ответ со статусом '
+            '201.'
+        )
         response_data = response.json()
-        assert response_data.get('first_name') == data['first_name'], \
-            'Проверьте, что при POST запросе `/api/v1/users/` с правильными данными возвращаете `first_name`.'
-        assert response_data.get('last_name') == data['last_name'], \
-            'Проверьте, что при POST запросе `/api/v1/users/` с правильными данными возвращаете `last_name`.'
-        assert response_data.get('username') == data['username'], \
-            'Проверьте, что при POST запросе `/api/v1/users/` с правильными данными возвращаете `username`.'
-        assert response_data.get('bio') == data['bio'], \
-            'Проверьте, что при POST запросе `/api/v1/users/` с правильными данными возвращаете `bio`.'
-        assert response_data.get('role') == data['role'], \
-            'Проверьте, что при POST запросе `/api/v1/users/` с правильными данными возвращаете `role`.'
-        assert response_data.get('email') == data['email'], \
-            'Проверьте, что при POST запросе `/api/v1/users/` с правильными данными возвращаете `email`.'
-        assert get_user_model().objects.count() == 3, \
-            'Проверьте, что при POST запросе `/api/v1/users/` вы создаёте пользователей.'
-        response = user_client.get('/api/v1/users/')
-        data = response.json()
-        assert len(data['results']) == 3, \
-            'Проверьте, что при GET запросе `/api/v1/users/` возвращаете данные с пагинацией. ' \
-            'Значение параметра `results` не правильное'
+        expected_keys = (
+            'first_name', 'last_name', 'username', 'bio', 'role', 'email'
+        )
+        for key in expected_keys:
+            assert response_data.get(key) == data[key], (
+                'Если POST-запрос к `/api/v1/users/` содержит корректные '
+                'данные - в ответе должны содержаться данные нового '
+                f'пользователя. Сейчас ключ {key} отстутствует либо содержит '
+                'некорректные данные.'
+            )
 
-    @pytest.mark.django_db(transaction=True)
-    def test_06_users_username_get_auth(self, user_client, admin):
-        user, moderator = create_users_api(user_client)
-        response = user_client.get(f'/api/v1/users/{admin.username}/')
-        assert response.status_code != 404, \
-            'Страница `/api/v1/users/{username}/` не найдена, проверьте этот адрес в *urls.py*'
-        assert response.status_code == 200, \
-            'Проверьте, что при GET запросе `/api/v1/users/{username}/` с токеном авторизации возвращается статус 200'
-        response_data = response.json()
-        assert response_data.get('username') == admin.username, \
-            'Проверьте, что при GET запросе `/api/v1/users/{username}/` возвращаете `username`.'
-        assert response_data.get('email') == admin.email, \
-            'Проверьте, что при GET запросе `/api/v1/users/{username}/` возвращаете `email`.'
-
-        response = user_client.get(f'/api/v1/users/{moderator.username}/')
-        assert response.status_code == 200, \
-            'Проверьте, что при GET запросе `/api/v1/users/{username}/` с токеном авторизации возвращается статус 200'
-        response_data = response.json()
-        assert response_data.get('username') == moderator.username, \
-            'Проверьте, что при GET запросе `/api/v1/users/{username}/` возвращаете `username`.'
-        assert response_data.get('email') == moderator.email, \
-            'Проверьте, что при GET запросе `/api/v1/users/{username}/` возвращаете `email`.'
-        assert response_data.get('first_name') == moderator.first_name, \
-            'Проверьте, что при GET запросе `/api/v1/users/` возвращаете `first_name`.'
-        assert response_data.get('last_name') == moderator.last_name, \
-            'Проверьте, что при GET запросе `/api/v1/users/` возвращаете `last_name`.'
-        assert response_data.get('bio') == moderator.bio, \
-            'Проверьте, что при GET запросе `/api/v1/users/` возвращаете `bio`.'
-        assert response_data.get('role') == moderator.role, \
-            'Проверьте, что при GET запросе `/api/v1/users/` возвращаете `role`.'
-
-    @pytest.mark.django_db(transaction=True)
-    def test_07_users_username_patch_auth(self, user_client, admin):
-        user, moderator = create_users_api(user_client)
-        data = {
-            'first_name': 'Admin',
-            'last_name': 'Test',
-            'bio': 'description'
-        }
-        response = user_client.patch(f'/api/v1/users/{admin.username}/', data=data)
-        assert response.status_code == 200, \
-            'Проверьте, что при PATCH запросе `/api/v1/users/{username}/` с токеном авторизации возвращается статус 200'
-        test_admin = get_user_model().objects.get(username=admin.username)
-        assert test_admin.first_name == data['first_name'], \
-            'Проверьте, что при PATCH запросе `/api/v1/users/{username}/` изменяете данные.'
-        assert test_admin.last_name == data['last_name'], \
-            'Проверьте, что при PATCH запросе `/api/v1/users/{username}/` изменяете данные.'
-        response = user_client.patch(f'/api/v1/users/{user.username}/', data={'role': 'admin'})
-        assert response.status_code == 200, \
-            'Проверьте, что при PATCH запросе `/api/v1/users/{username}/` с токеном авторизации возвращается статус 200'
-        client_user = auth_client(user)
-        response = client_user.get(f'/api/v1/users/{admin.username}/')
-        assert response.status_code == 200, \
-            'Проверьте, что при PATCH запросе `/api/v1/users/{username}/` можно изменить роль пользователя'
-
-    @pytest.mark.django_db(transaction=True)
-    def test_08_users_username_delete_auth(self, user_client):
-        user, moderator = create_users_api(user_client)
-        response = user_client.delete(f'/api/v1/users/{user.username}/')
-        assert response.status_code == 204, \
-            'Проверьте, что при DELETE запросе `/api/v1/users/{username}/` возвращаете статус 204'
-        assert get_user_model().objects.count() == 2, \
-            'Проверьте, что при DELETE запросе `/api/v1/users/{username}/` удаляете пользователя'
-
-    def check_permissions(self, user, user_name, admin):
-        client_user = auth_client(user)
-        response = client_user.get('/api/v1/users/')
-        assert response.status_code == 403, \
-            f'Проверьте, что при GET запросе `/api/v1/users/` ' \
-            f'с токеном авторизации {user_name} возвращается статус 403'
-        data = {
-            'username': 'TestUser9876',
+    def test_05_04_users_post_user_superuser(self, user_superuser_client,
+                                             django_user_model):
+        valid_data = {
+            'username': 'TestUser_3',
             'role': 'user',
-            'email': 'testuser9876@yamdb.fake'
+            'email': 'testuser3@yamdb.fake'
         }
-        response = client_user.post('/api/v1/users/', data=data)
-        assert response.status_code == 403, \
-            f'Проверьте, что при POST запросе `/api/v1/users/` ' \
-            f'с токеном авторизации {user_name} возвращается статус 403'
+        response = user_superuser_client.post(
+            '/api/v1/users/', data=valid_data
+        )
+        assert response.status_code == HTTPStatus.CREATED, (
+            'Если POST-запрос суперпользователя к `/api/v1/users/` '
+            'содержит корректные данные - должен вернуться ответ со статусом '
+            '201.'
+        )
+        users_after = (
+            django_user_model.objects.filter(email=valid_data['email'])
+        )
+        assert users_after.exists(), (
+            'Если POST-запрос суперпользователя к `/api/v1/users/` '
+            'содержит корректные данные - должен быть создан новый '
+            'пользователь.'
+        )
 
-        response = client_user.get(f'/api/v1/users/{admin.username}/')
-        assert response.status_code == 403, \
-            f'Проверьте, что при GET запросе `/api/v1/users/{{username}}/` ' \
-            f'с токеном авторизации {user_name} возвращается статус 403'
+    def test_06_users_username_get_admin(self, admin_client, moderator):
+        response = admin_client.get(f'/api/v1/users/{moderator.username}/')
+        assert response.status_code != HTTPStatus.NOT_FOUND, (
+            'Эндпоинт `/api/v1/users/{username}/` не найден. Проверьте '
+            'настройки в *urls.py*.'
+        )
+        assert response.status_code == HTTPStatus.OK, (
+            'Проверьте, что GET-запрос администратора к '
+            '`/api/v1/users/{username}/` возвращает ответ со статусом 200.'
+        )
+
+        response_data = response.json()
+        expected_keys = (
+            'first_name', 'last_name', 'username', 'bio', 'role', 'email'
+        )
+        for key in expected_keys:
+            assert response_data.get(key) == getattr(moderator, key), (
+                'Проверьте, что ответ на GET-запрос администратора к '
+                '`/api/v1/users/{username}/` содержит данные пользователя.'
+                f'Сейчас ключ {key} отсутствует в ответе либо содержит '
+                'некорректные данные.'
+            )
+
+    def test_06_users_username_get_not_admin(self, user_client,
+                                             moderator_client, admin):
+        for test_client in (user_client, moderator_client):
+            response = test_client.get(f'/api/v1/users/{admin.username}/')
+            assert response.status_code != HTTPStatus.NOT_FOUND, (
+                'Эндпоинт `/api/v1/users/{username}/` не найден. Проверьте '
+                'настройки в *urls.py*.'
+            )
+            assert response.status_code == HTTPStatus.FORBIDDEN, (
+                'GET-запрос пользователя, не обладающего правами '
+                'администратора, отправленный к `/api/v1/users/{username}/`, '
+                'должен вернуть ответ со статусом 403.'
+            )
+
+    def test_07_01_users_username_patch_admin(self, user, admin_client,
+                                              django_user_model):
         data = {
             'first_name': 'Admin',
             'last_name': 'Test',
             'bio': 'description'
         }
-        response = client_user.patch(f'/api/v1/users/{admin.username}/', data=data)
-        assert response.status_code == 403, \
-            f'Проверьте, что при PATCH запросе `/api/v1/users/{{username}}/` ' \
-            f'с токеном авторизации {user_name} возвращается статус 403'
-        response = client_user.delete(f'/api/v1/users/{admin.username}/')
-        assert response.status_code == 403, \
-            f'Проверьте, что при DELETE запросе `/api/v1/users/{{username}}/` ' \
-            f'с токеном авторизации {user_name} возвращается статус 403'
+        response = admin_client.patch(
+            f'/api/v1/users/{user.username}/', data=data
+        )
+        assert response.status_code == HTTPStatus.OK, (
+            'Если PATCH-запрос администратора, отправленный к '
+            '`/api/v1/users/{username}/`, содержит корректные данные - должен '
+            'вернуться ответ со статусом 200.'
+        )
+        user = django_user_model.objects.get(username=user.username)
+        for key in data:
+            assert getattr(user, key) == data[key], (
+                'Проверьте, что PATCH-запрос администратора к '
+                '`/api/v1/users/{username}/` может изменять данные другого '
+                'пользователя.'
+            )
 
-    @pytest.mark.django_db(transaction=True)
-    def test_09_users_check_permissions(self, user_client, admin):
-        user, moderator = create_users_api(user_client)
-        self.check_permissions(user, 'обычного пользователя', admin)
-        self.check_permissions(moderator, 'модератора', admin)
+        response = admin_client.patch(
+            f'/api/v1/users/{user.username}/', data={'role': 'admin'}
+        )
+        assert response.status_code == HTTPStatus.OK, (
+            'Проверьте, что PATCH-запрос администратора к '
+            '`/api/v1/users/{username}/` может изменить роль пользователя'
+        )
+        response = admin_client.patch(
+            f'/api/v1/users/{user.username}/', data={'role': 'owner'}
+        )
+        assert response.status_code == HTTPStatus.BAD_REQUEST, (
+            'Если в PATCH-запросе администратора к '
+            '`/api/v1/users/{username}/` передана несуществующая роль - '
+            'должен вернуться ответ со статусом 400.'
+        )
 
-    @pytest.mark.django_db(transaction=True)
-    def test_10_users_me_get(self, user_client, admin):
-        user, moderator = create_users_api(user_client)
-        response = user_client.get(f'/api/v1/users/me/')
-        assert response.status_code == 200, \
-            'Проверьте, что при GET запросе `/api/v1/users/me/` с токеном авторизации возвращается статус 200'
+    def check_user_data_not_changed_with_patch(self, user, client_role):
+        if user:
+            for key in self.PATCH_DATA:
+                assert getattr(user, key) != self.PATCH_DATA[key], (
+                    f'Проверьте, что PATCH-запрос {client_role} к '
+                    '`/api/v1/users/{username}/` для профиля другого '
+                    'пользователя не изменяет данные этого пользователя.'
+                )
+        else:
+            raise AssertionError(
+                f'Проверьте, что PATCH-запрос {client_role} к '
+                '`/api/v1/users/{username}/` для профиля другого '
+                'пользователя не удаляет этого пользователя.'
+            )
+
+    def test_07_02_users_username_patch_moderator(self,
+                                                  moderator_client,
+                                                  user,
+                                                  django_user_model):
+        response = moderator_client.patch(
+            f'/api/v1/users/{user.username}/', data=self.PATCH_DATA
+        )
+        assert response.status_code == HTTPStatus.FORBIDDEN, (
+            'Проверьте, что PATCH-запрос модератора к '
+            '`/api/v1/users/{username}/` для профиля другого пользователя '
+            'возвращает ответ со статусом 403.'
+        )
+
+        user = (
+            django_user_model.objects.filter(username=user.username).first()
+        )
+        self.check_user_data_not_changed_with_patch(user, 'модератора')
+
+    def test_07_03_users_username_patch_user(self, user_client, user,
+                                             django_user_model):
+        response = user_client.patch(
+            f'/api/v1/users/{user.username}/', data=self.PATCH_DATA
+        )
+        assert response.status_code == HTTPStatus.FORBIDDEN, (
+            'Проверьте, что PATCH-запрос пользователя с ролью `user` к '
+            '`/api/v1/users/{username}/` возвращает ответ со статусом 403.'
+        )
+
+        user = (
+            django_user_model.objects.filter(username=user.username).first()
+        )
+        self.check_user_data_not_changed_with_patch(
+            user, 'пользователя с ролью `user`'
+        )
+
+    def test_07_05_users_username_put_not_allowed(self, admin_client, user):
+        response = admin_client.put(
+            f'/api/v1/users/{user.username}/', data=self.PATCH_DATA
+        )
+        assert response.status_code == HTTPStatus.METHOD_NOT_ALLOWED, (
+            'Проверьте, что PUT-запрос к `/api/v1/users/{username}/` '
+            'не предусмотрен и возвращает статус 405.'
+        )
+
+    def test_08_01_users_username_delete_admin(self, user, admin_client,
+                                               django_user_model):
+        users_cnt = django_user_model.objects.count()
+        response = admin_client.delete(f'/api/v1/users/{user.username}/')
+        assert response.status_code == HTTPStatus.NO_CONTENT, (
+            'Проверьте, что DELETE-запрос администратора к '
+            '`/api/v1/users/{username}/` возвращает ответ со статусом 204.'
+        )
+        assert django_user_model.objects.count() == (users_cnt - 1), (
+            'Проверьте, что DELETE-запрос администратора к '
+            '`/api/v1/users/{username}/` удаляет пользователя.'
+        )
+
+    def test_08_02_users_username_delete_moderator(self, moderator_client,
+                                                   user, django_user_model):
+        users_cnt = django_user_model.objects.count()
+        response = moderator_client.delete(f'/api/v1/users/{user.username}/')
+        assert response.status_code == HTTPStatus.FORBIDDEN, (
+            'Проверьте, что DELETE-запрос модератора к '
+            '`/api/v1/users/{username}/` возвращает ответ со статусом 403.'
+        )
+        assert django_user_model.objects.count() == users_cnt, (
+            'Проверьте, что DELETE-запрос модератора к '
+            '`/api/v1/users/{username}/` не удаляет пользователя.'
+        )
+
+    def test_08_03_users_username_delete_user(self, user_client, user,
+                                              django_user_model):
+        users_cnt = django_user_model.objects.count()
+        response = user_client.delete(f'/api/v1/users/{user.username}/')
+        assert response.status_code == HTTPStatus.FORBIDDEN, (
+            'Проверьте, что DELETE-запрос пользователя с ролью `user` к '
+            '`/api/v1/users/{username}/` возвращает ответ со статусом 403.'
+        )
+        assert django_user_model.objects.count() == users_cnt, (
+            'Проверьте, что DELETE-запрос пользователя с ролью `user` к'
+            '`/api/v1/users/{username}/` не удаляет пользователя.'
+        )
+
+    def test_08_04_users_username_delete_superuser(self, user_superuser_client,
+                                                   user, django_user_model):
+        users_cnt = django_user_model.objects.count()
+        response = user_superuser_client.delete(
+            f'/api/v1/users/{user.username}/'
+        )
+        assert response.status_code == HTTPStatus.NO_CONTENT, (
+            'Проверьте, что DELETE-запрос суперпользователя к '
+            '`/api/v1/users/{username}/` возвращает ответ со статусом 204.'
+        )
+        assert django_user_model.objects.count() == (users_cnt - 1), (
+            'Проверьте, что DELETE-запрос суперпользователя к '
+            '`/api/v1/users/{username}/` удаляет пользователя.'
+        )
+
+    def test_09_users_me_get(self, user_client, user):
+        response = user_client.get('/api/v1/users/me/')
+        assert response.status_code == HTTPStatus.OK, (
+            'Проверьте, что GET-запрос обычного пользователя к '
+            '`/api/v1/users/me/` возвращает ответ со статусом 200.'
+        )
+
         response_data = response.json()
-        assert response_data.get('username') == admin.username, \
-            'Проверьте, что при GET запросе `/api/v1/users/me/` возвращаете данные пользователя'
-        client_user = auth_client(moderator)
-        response = client_user.get(f'/api/v1/users/me/')
-        assert response.status_code == 200, \
-            'Проверьте, что при GET запросе `/api/v1/users/me/` с токеном авторизации возвращается статус 200'
-        response_data = response.json()
-        assert response_data.get('username') == moderator.username, \
-            'Проверьте, что при GET запросе `/api/v1/users/me/` возвращаете данные пользователя'
-        assert response_data.get('role') == 'moderator', \
-            'Проверьте, что при GET запросе `/api/v1/users/me/` возвращаете данные пользователя'
-        assert response_data.get('email') == moderator.email, \
-            'Проверьте, что при GET запросе `/api/v1/users/me/` возвращаете данные пользователя'
-        response = client_user.delete(f'/api/v1/users/me/')
-        assert response.status_code == 405, \
-            'Проверьте, что при DELETE запросе `/api/v1/users/me/` возвращается статус 405'
+        expected_keys = ('username', 'role', 'email', 'bio')
+        for key in expected_keys:
+            assert response_data.get(key) == getattr(user, key), (
+                'Проверьте, что GET-запрос к `/api/v1/users/me/` возвращает '
+                'данные пользователя в неизмененном виде. Сейчас ключ '
+                f'`{key}` отсутствует либо содержит некорректные данные.'
+            )
 
-    @pytest.mark.django_db(transaction=True)
-    def test_11_users_me_patch(self, user_client):
-        user, moderator = create_users_api(user_client)
+    def test_09_02_users_me_delete_not_allowed(self, user_client, user,
+                                               django_user_model):
+        response = user_client.delete('/api/v1/users/me/')
+        assert response.status_code == HTTPStatus.METHOD_NOT_ALLOWED, (
+            'Проверьте, что DELETE-запрос к `/api/v1/users/me/` возвращает '
+            'ответ со статусом 405.'
+        )
+        user = (
+            django_user_model.objects.filter(username=user.username).first()
+        )
+        assert user, (
+            'Проверьте, что DELETE-запрос к `/api/v1/users/me/` не удаляет '
+            'пользователя.'
+        )
+
+    def test_10_01_users_me_patch(self, django_user_model, admin_client,
+                                  admin, moderator_client, moderator,
+                                  user_client, user):
+        data = {'bio': 'description'}
+
+        for client, user in (
+                (admin_client, admin),
+                (moderator_client, moderator),
+                (user_client, user)
+        ):
+            response = client.patch('/api/v1/users/me/', data=data)
+            assert response.status_code == HTTPStatus.OK, (
+                'Проверьте, что PATCH-запрос к `/api/v1/users/me/` доступен '
+                'пользователям всех ролей и возвращает ответ со статусом 200.'
+            )
+            user = django_user_model.objects.filter(
+                username=user.username
+            ).first()
+            assert user.bio == data['bio'], (
+                'Проверьте, что PATCH-запрос к `/api/v1/users/me/` изменяет '
+                'данные пользователя.'
+            )
+
+    @pytest.mark.parametrize(
+        'data,messege', invalid_data_for_user_patch_and_creation
+    )
+    def test_10_02_users_me_has_field_validation(self, user_client, data,
+                                                 messege):
+        url = '/api/v1/users/me/'
+        request_method = 'PATCH'
+        response = user_client.patch(url, data=data)
+        assert response.status_code == HTTPStatus.BAD_REQUEST, (
+            messege[0].format(url=url, request_method=request_method)
+        )
+
+    def test_10_03_users_me_patch_change_role_not_allowed(self,
+                                                          user_client,
+                                                          user,
+                                                          django_user_model):
         data = {
-            'first_name': 'Admin',
-            'last_name': 'Test',
-            'bio': 'description'
+            'first_name': 'New user first name',
+            'last_name': 'New user last name',
+            'bio': 'new user bio',
         }
-        response = user_client.patch(f'/api/v1/users/me/', data=data)
-        assert response.status_code == 200, \
-            'Проверьте, что при PATCH запросе `/api/v1/users/me/` с токеном авторизации возвращается статус 200'
-        response_data = response.json()
-        assert response_data.get('bio') == 'description', \
-            'Проверьте, что при PATCH запросе `/api/v1/users/me/` изменяете данные'
-        client_user = auth_client(moderator)
-        response = client_user.patch(f'/api/v1/users/me/', data={'first_name': 'NewTest'})
-        test_moderator = get_user_model().objects.get(username=moderator.username)
-        assert response.status_code == 200, \
-            'Проверьте, что при PATCH запросе `/api/v1/users/me/` с токеном авторизации возвращается статус 200'
-        assert test_moderator.first_name == 'NewTest', \
-            'Проверьте, что при PATCH запросе `/api/v1/users/me/` изменяете данные'
+        response = user_client.patch('/api/v1/users/me/', data=data)
+        assert response.status_code == HTTPStatus.OK, (
+            'Проверьте, что PATCH-запрос пользователя с ролью `user` к '
+            '`/api/v1/users/me/` возвращает ответ со статусом 200.'
+        )
+
+        current_role = user.role
+        data = {
+            'role': 'admin'
+        }
+        response = user_client.patch('/api/v1/users/me/', data=data)
+        user = django_user_model.objects.filter(username=user.username).first()
+        assert user.role == current_role, (
+            'Проверьте, что PATCH-запрос к `/api/v1/users/me/` с ключом '
+            '`role` не изменяет роль пользователя.'
+        )
