@@ -28,7 +28,7 @@ if FILENAME not in project_dir_content:
         f'Убедитесь, что у вас верная структура проекта.'
     )
 
-assert get_version() < '4.0.0', 'Пожалуйста, используйте версию Django < 4.0.0'
+assert get_version() == '4.2.1', 'Пожалуйста, используйте версию Django 4.2.1'
 
 pytest_plugins = [
     'tests.fixtures.fixture_user',
