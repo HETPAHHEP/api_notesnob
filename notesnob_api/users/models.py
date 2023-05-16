@@ -1,6 +1,7 @@
-from django.db import models
 from django.contrib.auth.models import AbstractUser
-from .validators import UsernameValidator
+from django.db import models
+
+from api.validators import UsernameValidator
 
 
 class CustomUser(AbstractUser):
@@ -11,7 +12,7 @@ class CustomUser(AbstractUser):
         ('admin', 'Admin'),
     ]
 
-    username = models.CharField(max_length=150, validators=[UsernameValidator], unique=True)
+    username = models.CharField(max_length=150, validators=[UsernameValidator()], unique=True)
     email = models.EmailField(max_length=254, unique=True)
     bio = models.TextField(blank=True)
     role = models.CharField(
