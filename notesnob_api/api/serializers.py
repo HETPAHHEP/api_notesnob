@@ -2,8 +2,9 @@ from rest_framework import serializers, status
 from rest_framework.exceptions import ValidationError
 
 from api.models import VerificationCode
+from api.validators import (GetTokenForUserError, RestrictedUsernameValidator,
+                            UsernameValidator)
 from users.models import CustomUser
-from api.validators import UsernameValidator, RestrictedUsernameValidator, GetTokenForNonExistentUserError
 
 from .services.services_email_code import CONFIRMATION_CODE_LENGTH
 
@@ -44,12 +45,15 @@ class GetJWTUserSerializer(serializers.Serializer):
     confirmation_code = serializers.CharField(max_length=CONFIRMATION_CODE_LENGTH)
 
     def validate(self, attrs):
+        if not attrs:
+            raise ValidationError({'error': 'Значения для токена отсутствуют'})
+
         username = attrs.get('username')
         confirmation_code = attrs.get('confirmation_code')
 
         if not CustomUser.objects.filter(username=username).exists():
-            raise GetTokenForNonExistentUserError(
-                detail={'username': 'Пользователь с таким username не существует'},
+            raise GetTokenForUserError(
+                detail={'username': 'Пользователь с таким username не существует'}
             )
 
         if not VerificationCode.objects.filter(

@@ -3,8 +3,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 
+from api.validators import GetTokenForUserError
 from users.models import CustomUser
-from api.validators import GetTokenForNonExistentUserError
 
 from .serializers import GetJWTUserSerializer, RegisterUserSerializer
 from .services.services_email_code import valid_code_check_for_jwt
@@ -51,11 +51,13 @@ class GetJWTUser(APIView):
                     'token': user_token
                 })
 
-        else:
-            raise GetTokenForNonExistentUserError(
-                serializer.errors)
+        try:
+            if serializer.errors.get('username')[0] == 'Пользователь с таким username не существует':
+                raise GetTokenForUserError(serializer.errors)
+        except TypeError:
+            raise ValidationError(serializer.errors)
 
         return Response({
             'serializer_errors': serializer.errors,
             'message': 'Что-то пошло не так.'
-        }, status=status.HTTP_404_NOT_FOUND)
+        }, status=status.HTTP_400_BAD_REQUEST)

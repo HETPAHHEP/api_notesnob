@@ -1,7 +1,7 @@
-from django.core.validators import RegexValidator, BaseValidator
+from django.core.validators import BaseValidator, RegexValidator
+from rest_framework import status
 from rest_framework.exceptions import ValidationError
 from rest_framework.serializers import ValidationError
-from rest_framework import status
 
 
 class UsernameValidator(RegexValidator):
@@ -22,5 +22,5 @@ class RestrictedUsernameValidator(BaseValidator):
             raise ValidationError(detail={'self.code': self.message}, code=self.code)
 
 
-class GetTokenForNonExistentUserError(ValidationError):
+class GetTokenForUserError(ValidationError):
     status_code = status.HTTP_404_NOT_FOUND
