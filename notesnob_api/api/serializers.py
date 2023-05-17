@@ -1,4 +1,4 @@
-from rest_framework import serializers, status
+from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from api.models import VerificationCode
@@ -62,3 +62,10 @@ class GetJWTUserSerializer(serializers.Serializer):
                 detail={'error': 'Недействительные данные'})
 
         return attrs
+
+
+class CustomUserSerializer(serializers.ModelSerializer):
+    """Сериализатор для взаимодействия с информацией о пользователе"""
+    class Meta:
+        model = CustomUser
+        fields = ['username', 'email', 'first_name', 'last_name', 'bio', 'role']

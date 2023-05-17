@@ -1,7 +1,6 @@
 from django.core.validators import BaseValidator, RegexValidator
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
-from rest_framework.serializers import ValidationError
 
 
 class UsernameValidator(RegexValidator):

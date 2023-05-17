@@ -19,8 +19,8 @@ def _set_code_validity_time():
 
 def valid_code_check_for_registration(email, username):
     """Проверка существования и действительности кода"""
-    user_code = VerificationCode.objects.filter(email=email, username=username)
-    if user_code.exists():
+    user_code = VerificationCode.objects.get(email=email, username=username)
+    if user_code:
         user_code.delete()
 
     return True
@@ -28,8 +28,8 @@ def valid_code_check_for_registration(email, username):
 
 def valid_code_check_for_jwt(code, username):
     """Проверка действительности кода для выдачи JWT"""
-    user_code = VerificationCode.objects.filter(code=code, username=username)
-    if user_code.exists():
+    user_code = VerificationCode.objects.get(confirmation_code=code, username=username)
+    if user_code:
         # Если код истек, то удаляем его и отправляем новый
         if user_code.expires_at.replace(tzinfo=None) < datetime.datetime.now():
             email = user_code.email

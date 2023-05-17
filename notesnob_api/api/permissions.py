@@ -15,12 +15,12 @@ class IsAuthenticatedUser(BasePermission):
 
 class IsModeratorUser(BasePermission):
     def has_permission(self, request, view):
-        return request.user.is_authenticated() and request.user.is_staff
+        return request.user.is_authenticated() and (request.user.is_staff or request.user.role == 'moderator')
 
 
 class IsAdminUser(BasePermission):
     def has_permission(self, request, view):
-        return request.user.is_authenticated() and request.user.is_superuser()
+        return request.user.is_authenticated() and (request.user.is_superuser() or request.user.role == 'admin')
 
 
 
