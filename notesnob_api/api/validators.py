@@ -10,6 +10,7 @@ class UsernameValidator(RegexValidator):
 
 
 class RestrictedUsernameValidator(BaseValidator):
+    """Для ограничения регистрации с указанным username"""
     message = 'Restricted username: me'
 
     def __init__(self, limit_value='me', message=None, code=None):
@@ -22,4 +23,5 @@ class RestrictedUsernameValidator(BaseValidator):
 
 
 class GetTokenForUserError(ValidationError):
+    """Для вызова ошибки при получении токена"""
     status_code = status.HTTP_404_NOT_FOUND

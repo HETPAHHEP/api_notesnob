@@ -1,3 +1,4 @@
+from django.db.models import Avg
 from rest_framework import filters, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
@@ -5,17 +6,22 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from api.validators import GetTokenForUserError
+from review.models import Category, Comment, Genre, Review, Title
 from users.models import CustomUser
 
-from .permissions import IsAdminUser
-from .serializers import (CustomUserSerializer, GetJWTUserSerializer,
-                          RegisterUserSerializer)
+from .mixins import CreateListDestroyViewSet
+from .permissions import (IsAdminOrReadOnly, IsAdminUser,
+                          IsOwnerModeratorAdminOrReadOnly)
+from .serializers import (CategorySerializer, CustomUserSerializer,
+                          GenreSerializer, GetJWTUserSerializer,
+                          RegisterUserSerializer, ReviewSerializer,
+                          TitleSerializer, CommentSerializer)
 from .services.services_email_code import valid_code_check_for_jwt
 from .services.services_jwt import create_jwt_access_token
 from .services.services_registration_user import start_registration
 
 
-class RegisterUser(APIView):
+class RegisterUserView(APIView):
     """Инициализация процесса регистрации"""
     serializer_class = RegisterUserSerializer
     permission_classes = [permissions.AllowAny]
@@ -36,7 +42,7 @@ class RegisterUser(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class GetJWTUser(APIView):
+class GetJWTUserView(APIView):
     """Добавляем нового пользователя в конце регистрации"""
     serializer_class = GetJWTUserSerializer
     permission_classes = [permissions.AllowAny]
@@ -92,3 +98,44 @@ class CustomUserViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
 
         return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+class CategoryViewSet(CreateListDestroyViewSet):
+    """Просмотр всех категорий"""
+    serializer_class = CategorySerializer
+    queryset = Category.objects.all()
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['name']
+    permission_classes = [IsAdminOrReadOnly]
+
+
+class GenreViewSet(CreateListDestroyViewSet):
+    """Просмотр всех жанром"""
+    serializer_class = GenreSerializer
+    queryset = Genre.objects.all()
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['name']
+    permission_classes = [IsAdminOrReadOnly]
+
+
+class TitleViewSet(viewsets.ModelViewSet):
+    """Изменение и просмотр всех произведений"""
+    serializer_class = TitleSerializer
+    queryset = Title.objects.annotate(rating=Avg('reviews__score'))
+    lookup_field = 'username'
+    permission_classes = [IsAdminOrReadOnly]
+
+
+class ReviewViewSet(viewsets.ModelViewSet):
+    """Изменение и просмотр всех отзывов"""
+    serializer_class = ReviewSerializer
+    queryset = Review.objects.all()
+    permission_classes = [IsOwnerModeratorAdminOrReadOnly]
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    """Изменение и просмотр всех комментариев к отзывам"""
+    serializer_class = CommentSerializer
+    queryset = Comment.objects.all()
+    permission_classes = [IsOwnerModeratorAdminOrReadOnly]
+

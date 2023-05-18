@@ -4,6 +4,7 @@ from rest_framework.exceptions import ValidationError
 from api.models import VerificationCode
 from api.validators import (GetTokenForUserError, RestrictedUsernameValidator,
                             UsernameValidator)
+from review.models import Category, Comment, Genre, Review, Title
 from users.models import CustomUser
 
 from .services.services_email_code import CONFIRMATION_CODE_LENGTH
@@ -69,3 +70,36 @@ class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = ['username', 'email', 'first_name', 'last_name', 'bio', 'role']
+
+
+class CategorySerializer(serializers.ModelSerializer):
+    """Сериализатор для взаимодействия с категориями произведения"""
+    class Meta:
+        model = Category
+        fields = '__all__'
+
+
+class GenreSerializer(serializers.ModelSerializer):
+    """Сериализатор для взаимодействия с жанрами произведения"""
+    class Meta:
+        model = Genre
+        fields = '__all__'
+
+
+class TitleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Title
+        fields = '__all__'
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Review
+        fields = '__all__'
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Comment
+        fields = '__all__'
+
