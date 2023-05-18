@@ -20,3 +20,4 @@ class CustomUser(AbstractUser):
         choices=ROLE_CHOICES,
         default='user'
     )
+    is_verified = models.BooleanField(default=False)

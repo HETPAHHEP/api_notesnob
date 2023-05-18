@@ -11,6 +11,7 @@ router.register(r'users', views.CustomUserViewSet, basename='users')
 
 urlpatterns = [
     path(f'{VERSION_API}/', include(router.urls)),
+
     path(f'{VERSION_API}/auth/signup/', views.RegisterUser.as_view(), name='registration_user'),
     path(f'{VERSION_API}/auth/token/', views.GetJWTUser.as_view(), name='creation_token'),
 ]

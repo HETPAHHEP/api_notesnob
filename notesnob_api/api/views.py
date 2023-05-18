@@ -1,13 +1,13 @@
-from .permissions import IsAdminUser
-from rest_framework import permissions, status, viewsets
+from rest_framework import filters, permissions, status, viewsets
+from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.decorators import action
-import logging
 
 from api.validators import GetTokenForUserError
 from users.models import CustomUser
 
+from .permissions import IsAdminUser
 from .serializers import (CustomUserSerializer, GetJWTUserSerializer,
                           RegisterUserSerializer)
 from .services.services_email_code import valid_code_check_for_jwt
@@ -70,16 +70,16 @@ class CustomUserViewSet(viewsets.ModelViewSet):
     """Изменение и просмотр информации пользователей"""
     serializer_class = CustomUserSerializer
     queryset = CustomUser.objects.all()
+    lookup_field = 'username'
+    permission_classes = [IsAdminUser]
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['username']
+    http_method_names = ['get', 'post', 'patch', 'delete']
 
-    # def get_permissions(self):
-    #     if self.action in ('list', 'create'):
-    #         permission_classes = [IsAdminUser]
-    #         return permission_classes
-
-    @action(detail=True, methods=['get', 'patch'],
+    @action(detail=False, methods=['get', 'patch'],
             permission_classes=[permissions.IsAuthenticated], url_name='me', url_path='me')
     def profile_info_for_auth_user(self, request):
-        logging.info('try')
+        """Получить или изменить информацию профиля"""
         user = request.user
         if request.method == 'GET':
             serializer = self.get_serializer(user)
@@ -88,7 +88,7 @@ class CustomUserViewSet(viewsets.ModelViewSet):
         elif request.method == 'PATCH':
             serializer = self.get_serializer(user, data=request.data, partial=True)
             serializer.is_valid(raise_exception=True)
-            serializer.save()
+            serializer.save(role=request.user.role)
             return Response(serializer.data)
 
         return Response(status=status.HTTP_400_BAD_REQUEST)

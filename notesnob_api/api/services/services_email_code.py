@@ -1,26 +1,26 @@
-import datetime
-
 from django.core.mail import send_mail
+from django.utils import timezone
 from django.utils.crypto import get_random_string
 
 from api.models import VerificationCode
 from notesnob_api.settings import DEFAULT_FROM_EMAIL
+from users.models import CustomUser
 
 CONFIRMATION_CODE_LENGTH = 14
 
 
 def _set_code_validity_time():
     """Установка времени действительности кода регистрации"""
-    code_validity_time = 1
-    return datetime.datetime.now() + datetime.timedelta(
-        hours=code_validity_time
-    )
+    code_validity_time = 1  # Время действительности в часах
+    current_time = timezone.now()  # Текущее время в осведомленном формате
+    code_validity = current_time + timezone.timedelta(hours=code_validity_time)
+    return code_validity
 
 
 def valid_code_check_for_registration(email, username):
     """Проверка существования и действительности кода"""
-    user_code = VerificationCode.objects.get(email=email, username=username)
-    if user_code:
+    user_code = VerificationCode.objects.filter(email=email, username=username)
+    if user_code.exists():
         user_code.delete()
 
     return True
@@ -31,12 +31,14 @@ def valid_code_check_for_jwt(code, username):
     user_code = VerificationCode.objects.get(confirmation_code=code, username=username)
     if user_code:
         # Если код истек, то удаляем его и отправляем новый
-        if user_code.expires_at.replace(tzinfo=None) < datetime.datetime.now():
+        if user_code.expires_at < timezone.now():
             email = user_code.email
             user_code.delete()
             send_email_with_confirmation_code(email, username)
             return False
 
+        user = CustomUser.objects.get(username=username)
+        user.is_verified = True  # Сообщает, что JWT токен был выдан
         user_code.delete()
         return True
 

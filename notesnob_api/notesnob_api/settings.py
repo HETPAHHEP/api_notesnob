@@ -13,7 +13,7 @@ load_dotenv()
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-3xpjy+fbxp2%_01xrjljd!mbf)p63k8=2h&++zm^kxk(m#fikc'
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -122,9 +122,11 @@ STATICFILES_DIRS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+
 EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
-EMAIL_FILE_PATH = BASE_DIR / 'users' / 'sent_emails'
+EMAIL_FILE_PATH = BASE_DIR / 'api' / 'sent_emails'
 DEFAULT_FROM_EMAIL = os.getenv('EMAIL')
+
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -134,29 +136,33 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 10,
 }
 
+
+# Выдается только access token. После окончания срока и нельзя будет пользоваться,
+# а также получить новый. Требуется добавить refresh token.
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=10),
     'AUTH_HEADER_TYPES': ('Bearer',),
-    'SIGNING_KEY': os.getenv('SECRET_KEY'),
+    'SIGNING_KEY': os.getenv('JWT_SECRET_KEY'),
 }
+
 
 AUTH_USER_MODEL = 'users.CustomUser'
 
 
-LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "handlers": {
-        "file": {
-            "level": "INFO",
-            "class": "logging.StreamHandler",
-        },
-    },
-    "loggers": {
-        "django": {
-            "handlers": ["file"],
-            "level": "INFO",
-            "propagate": True,
-        },
-    },
-}
+# LOGGING = {
+#     "version": 1,
+#     "disable_existing_loggers": False,
+#     "handlers": {
+#         "file": {
+#             "level": "DEBUG",
+#             "class": "logging.StreamHandler",
+#         },
+#     },
+#     "loggers": {
+#         "django": {
+#             "handlers": ["file"],
+#             "level": "DEBUG",
+#             "propagate": True,
+#         },
+#     },
+# }
