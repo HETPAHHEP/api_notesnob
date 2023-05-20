@@ -6,7 +6,7 @@ api_path = os.path.join(MANAGE_PATH, 'api')
 if 'api' in project_dir_content and os.path.isdir(api_path):
     api_dir_content = os.listdir(api_path)
     assert 'models.py' in api_dir_content, (
-        f'В директории `{api_path}` должен быть файла с моделями. '
+        f'В директории `{api_path}` должен быть файл с моделями. '
     )
 else:
     assert False, f'Не найдено приложение `api` в папке {MANAGE_PATH}'

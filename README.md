@@ -12,3 +12,9 @@ openssl rand -hex 32
 ./manage.py shell -c "from django.core.management import utils; 
 print('django-insecure-' + utils.get_random_secret_key())"
 ```
+
+## Импорт тестовых данных из CSV
+
+```bash
+./manage.py start_import
+```
