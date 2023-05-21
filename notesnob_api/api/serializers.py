@@ -20,10 +20,10 @@ class RegisterUserSerializer(serializers.Serializer):
         username = attrs.get('username')
         email = attrs.get('email')
 
-        if CustomUser.objects.filter(username=username, email=email).exists() and \
-                CustomUser.objects.filter(username=username, email=email).first().is_verified:
-            raise serializers.ValidationError(
-                detail={'token': 'Токен для этого пользователя уже выдан'})
+        # if CustomUser.objects.filter(username=username, email=email).exists() and \
+        #         CustomUser.objects.filter(username=username, email=email).first().is_verified:
+        #     raise serializers.ValidationError(
+        #         detail={'token': 'Токен для этого пользователя уже выдан'})
 
         if CustomUser.objects.filter(email=email).exists() and not \
                 CustomUser.objects.filter(username=username).exists():
