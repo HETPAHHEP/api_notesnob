@@ -139,8 +139,7 @@ REST_FRAMEWORK = {
 }
 
 
-# Выдается только access token. После окончания срока и нельзя будет пользоваться,
-# а также получить новый. Требуется добавить refresh token.
+# Выдается только access token.
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=10),
     'AUTH_HEADER_TYPES': ('Bearer',),
