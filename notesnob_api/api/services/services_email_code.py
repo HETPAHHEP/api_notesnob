@@ -1,10 +1,10 @@
+from api.models import VerificationCode
 from django.core.mail import send_mail
 from django.utils import timezone
 from django.utils.crypto import get_random_string
-
-from api.models import VerificationCode
-from notesnob_api.settings import DEFAULT_FROM_EMAIL
 from users.models import CustomUser
+
+from notesnob_api.settings import DEFAULT_FROM_EMAIL
 
 CONFIRMATION_CODE_LENGTH = 14
 

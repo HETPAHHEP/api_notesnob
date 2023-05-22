@@ -1,9 +1,8 @@
-from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
-
 from api.models import VerificationCode
 from api.validators import (GetTokenForUserError, RestrictedUsernameValidator,
                             UsernameValidator)
+from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 from reviews.models import Category, Comment, Genre, Review, Title
 from users.models import CustomUser
 

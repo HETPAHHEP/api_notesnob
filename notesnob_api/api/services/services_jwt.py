@@ -1,5 +1,4 @@
 from rest_framework_simplejwt.tokens import AccessToken
-
 from users.models import CustomUser
 
 

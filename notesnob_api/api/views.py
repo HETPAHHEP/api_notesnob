@@ -1,28 +1,27 @@
+from api.validators import GetTokenForUserError
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-
 from rest_framework import filters, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
-from api.validators import GetTokenForUserError
 from reviews.models import Category, Comment, Genre, Review, Title
 from users.models import CustomUser
 
+from .filters import TitleFilter
 from .mixins import CreateListDestroyViewSet
 from .permissions import (IsAdminOrReadOnly, IsAdminUser,
                           IsOwnerModeratorAdminOrReadOnly)
-from .serializers import (CategorySerializer, CustomUserSerializer,
-                          GenreSerializer, GetJWTUserSerializer,
-                          RegisterUserSerializer, ReviewSerializer,
-                          TitleWriteSerializer, TitleReadSerializer, CommentSerializer)
+from .serializers import (CategorySerializer, CommentSerializer,
+                          CustomUserSerializer, GenreSerializer,
+                          GetJWTUserSerializer, RegisterUserSerializer,
+                          ReviewSerializer, TitleReadSerializer,
+                          TitleWriteSerializer)
 from .services.services_email_code import valid_code_check_for_jwt
 from .services.services_jwt import create_jwt_access_token
 from .services.services_registration_user import start_registration
-from .filters import TitleFilter
 
 
 class RegisterUserView(APIView):
