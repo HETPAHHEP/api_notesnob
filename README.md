@@ -17,6 +17,7 @@
 
 ## Использованные технологии
 
+* [Python 3.11](https://www.python.org/downloads/release/python-3110/)
 * [Django 4.2](https://docs.djangoproject.com/en/4.2/)
 * [Django REST framework 3.14](https://www.django-rest-framework.org)
 
@@ -62,10 +63,6 @@ pip install -r requirements.txt
     ```
 
 **Выполните миграции:**
-
-```bash
-./manage.py makemigrations
-```
 
 ```bash
 ./manage.py migrate
