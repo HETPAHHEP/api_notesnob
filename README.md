@@ -15,27 +15,19 @@
 * Для аутентификации используется **_только Access токен_**. Если необходимо получить токен снова, 
 то для этого отправляется новый код на почту.
 
+
 ## Использованные технологии
 
 * [Django 4.2](https://docs.djangoproject.com/en/4.2/)
 * [Django REST framework 3.14](https://www.django-rest-framework.org)
 
-## Установка проекта
 
-**Клонируйте данный проект, после установите виртуальное окружение:**
+## Запуск через Docker
 
-```bash
-python -m venv venv
-```
+**Клонируйте данный проект:**
 
 ```bash
-source venv/Scripts/activate
-```
-
-**Установите необходимые зависимости:**
-
-```bash
-pip install -r requirements.txt
+git clone git@github.com:HETPAHHEP/api_notesnob.git
 ```
 
 **Создайте _dotenv-файл_ и занесите необходимые переменные:**
@@ -53,28 +45,31 @@ pip install -r requirements.txt
     print('django-insecure-' + utils.get_random_secret_key())"
     ```
 
-3) Занесите необходимые переменные 
+3) Занесите переменные для проекта и своей базы данных _PostgreSQL_
 
     ```dotenv
     EMAIL=your_sending_email
     JWT_SECRET_KEY=your_jwt_secret_key
-    DJANGO_SECRET_KEY=your_djangp_secret_key
+    DJANGO_SECRET_KEY=your_django_secret_key
+    DB_ENGINE=django.db.backends.postgresql
+    DB_NAME=postgres
+    POSTGRES_USER=postgres
+    POSTGRES_PASSWORD=password_here
+    DB_HOST=db
+    DB_PORT=5432
     ```
 
-**Выполните миграции:**
+**Разверните проект с помощью _Docker-compose_:**
 
 ```bash
-./manage.py makemigrations
+docker-compose up
 ```
 
-```bash
-./manage.py migrate
-```
 
 ## Данные для тестирования
 
 Для удобной проверки доступны данные в CSV. Чтобы их импортировать в вашу базу данных,
-используйте команду:
+используйте команду в контейнере _web_:
 
 ```bash
 ./manage.py start_import
@@ -85,3 +80,5 @@ pip install -r requirements.txt
 Более подробные особенности работы проекта и доступные эндпоинты есть в документации:
 
 **[127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc/)**
+
+P.S. Посмотреть можно на сервере для разработки или подключив nginx для статики (сейчас отсутствует)
