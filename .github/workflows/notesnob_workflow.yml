@@ -74,3 +74,7 @@ jobs:
           to: ${{ secrets.TELEGRAM_TO }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
           message: ${{ github.workflow }} успешно выполнен!
+env:
+  DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+  EMAIL: ${{ secrets.EMAIL }}
+  JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
