@@ -2,8 +2,8 @@ from http import HTTPStatus
 
 import pytest
 
-from tests.utils import (check_fields, check_pagination, create_comments,
-                         create_reviews, create_single_comment)
+from api_tests.utils import (check_fields, check_pagination, create_comments,
+                             create_reviews, create_single_comment)
 
 
 @pytest.mark.django_db(transaction=True)
