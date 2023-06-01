@@ -1,9 +1,7 @@
 */db.sqlite3
 README.md
-pytest.ini
 LICENSE
 .gitignore
 */sent_emails/
 .idea/
 venv/
-tests/

@@ -1,19 +1,29 @@
 import os
 import re
 
-from django.conf import settings
+from .conftest import infra_dir_path, root_dir
 
 
-class TestDockerfile:
+class TestDockerfileCompose:
 
-    def test_dockerfile(self):
+    def test_infra_structure(self):
+        assert 'infra' in os.listdir(root_dir), (
+            f'Проверьте, что в пути {root_dir} указана папка `infra`'
+        )
+        assert os.path.isdir(infra_dir_path), (
+            f'Проверьте, что {infra_dir_path} - это папка, а не файл'
+        )
+
+    def test_docker_compose_file(self):
         try:
-            with open(f'{os.path.join(os.path.dirname(settings.BASE_DIR), "docker-compose.yaml")}', 'r') as f:
+            with open(f'{os.path.join(infra_dir_path, "docker-compose.yaml")}', 'r') as f:
                 docker_compose = f.read()
         except FileNotFoundError:
-            assert False, 'Проверьте, что добавили файл docker-compose.yaml'
+            assert False, f'Проверьте, что в директорию {infra_dir_path} добавлен файл `docker-compose.yaml`'
 
-        assert re.search(r'image:\s+postgres:', docker_compose), \
-            'Проверьте, что добавили образ postgres:latest в файл docker-compose'
-        assert re.search(r'build:\s+\.', docker_compose), \
-            'Проверьте, что добавили сборку контейнера из Dockerfile в файл docker-compose'
+        assert re.search(r'image:\s+postgres:', docker_compose), (
+            'Проверьте, что  в файл docker-compose.yaml добавлен образ postgres:latest'
+        )
+        assert re.search(r'image:\s+([a-zA-Z0-9]+)\/([a-zA-Z0-9_\.])+(\:[a-zA-Z0-9_-]+)?', docker_compose), (
+            'Проверьте, что добавили сборку контейнера из образа на вашем DockerHub в файл docker-compose.yaml'
+        )
