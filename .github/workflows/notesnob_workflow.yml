@@ -60,9 +60,9 @@ jobs:
        source: "infra/docker-compose.yaml, infra/nginx/default.conf"
        target: "~/app/"
        script: |
-         sudo docker-compose stop
-         sudo docker-compose rm web
-         sudo docker-compose up -d
+         sudo docker compose stop
+         sudo docker compose rm web
+         sudo docker compose up -d
   send_message:
     name: Sending a status message to Telegram
     runs-on: ubuntu-latest
