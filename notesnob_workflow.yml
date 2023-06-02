@@ -42,9 +42,11 @@ jobs:
       - name: Push to Docker Hub
         uses: docker/build-push-action@v2
         with:
+          context: ./notesnob_api
+          file: ./notesnob_api/Dockerfile
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/notesnob:latest
-          
+
   deploy:
    name: Deploy to server
    runs-on: ubuntu-latest
@@ -57,11 +59,19 @@ jobs:
        username: ${{ secrets.USER }}
        key: ${{ secrets.SSH_KEY }}
        passphrase: ${{ secrets.PASSPHRASE }} # ssh-ключ защищен фразой-паролем
-       source: "~/infra/"
-       target: "~/"
        script: |
          sudo docker compose stop
          sudo docker compose rm web
+         touch .env 
+         echo DB_ENGINE=${{ secrets.EMAIL }} >> .env
+         echo DB_ENGINE=${{ secrets.JWT_SECRET_KEY }} >> .env
+         echo DB_ENGINE=${{ secrets.DJANGO_SECRET_KEY }} >> .env
+         echo DB_ENGINE=${{ secrets.DB_ENGINE }} >> .env
+         echo DB_ENGINE=${{ secrets.DB_NAME }} >> .env
+         echo DB_ENGINE=${{ secrets.POSTGRES_USER }} >> .env
+         echo DB_ENGINE=${{ secrets.POSTGRES_PASSWORD }} >> .env
+         echo DB_ENGINE=${{ secrets.DB_HOST }} >> .env
+         echo DB_ENGINE=${{ secrets.DB_PORT }} >> .env
          sudo docker compose up -d
   send_message:
     name: Sending a status message to Telegram
