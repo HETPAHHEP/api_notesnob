@@ -1,5 +1,7 @@
 # API NoteSnob
 
+![Notesnob Workflow Status](https://github.com/HETPAHHEP/api_notesnob/actions/workflows/notesnob_workflow.yml/badge.svg?event=push)
+
 ## Описание
 
 Проект NoteSnob представляет собой базу отзывов о фильмах, книгах и музыке.
@@ -18,8 +20,11 @@
 
 ## Использованные технологии
 
+* [Python 3.11](https://www.python.org/downloads/release/python-3110/)
 * [Django 4.2](https://docs.djangoproject.com/en/4.2/)
 * [Django REST framework 3.14](https://www.django-rest-framework.org)
+* [PostgreSQL 15.3](https://www.postgresql.org/docs/15/release-15-3.html)
+* [Docker](https://www.docker.com)
 
 
 ## Запуск через Docker
@@ -74,6 +79,23 @@ docker-compose up
 docker exec -it api_notesnob-web-1 bash
 ```
 
+После чего самостоятельно или с помощью _entrypoint.sh_ сделайте миграции для базы данных
+и соберите статику проекта:
+
+1) Запустив скрипт
+   ```bash
+   sh /code/infra/entrypoint.sh  # нужно запускать в code/notesnob_api/
+   ```
+2) Самостоятельно
+   ```bash
+   python manage.py migrate --no-input
+   ```
+   
+   ```bash
+   python manage.py collectstatic --no-input --clear
+   ```
+
+
 ---
 
 ### Создание суперпользователя
@@ -100,5 +122,3 @@ python manage.py start_import
 Более подробные особенности работы проекта и доступные эндпоинты есть в документации:
 
 **[127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc/)**
-
-P.S. Посмотреть можно на сервере для разработки или подключив nginx для статики (сейчас отсутствует)
