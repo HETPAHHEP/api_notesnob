@@ -62,7 +62,7 @@ jobs:
        script: |
          sudo docker compose stop
          sudo docker compose rm web
-         touch .env 
+         truncate -s 0 .env
          echo EMAIL=${{ secrets.EMAIL }} >> .env
          echo EMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }} >> .env
          echo JWT_SECRET_KEY="${{ secrets.JWT_SECRET_KEY }}" >> .env
