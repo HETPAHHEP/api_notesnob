@@ -57,8 +57,7 @@ jobs:
        username: ${{ secrets.USER }}
        key: ${{ secrets.SSH_KEY }}
        passphrase: ${{ secrets.PASSPHRASE }} # ssh-ключ защищен фразой-паролем
-       source: "infra/docker-compose.yaml, infra/nginx/default.conf"
-       target: "~/app/"
+       source: "infra"
        script: |
          sudo docker compose stop
          sudo docker compose rm web
