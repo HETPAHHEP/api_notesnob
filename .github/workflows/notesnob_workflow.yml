@@ -1,4 +1,4 @@
-name: notesnob workflow
+name: NoteSnob Workflow
 
 on: [push]
 

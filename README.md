@@ -1,6 +1,6 @@
 # API NoteSnob
-
-![Notesnob Workflow](https://github.com/HETPAHHEP/api_notesnob/actions/workflows/notesnob_workflow.yml/badge.svg)
+pyth
+![NoteSnob Workflow](https://github.com/HETPAHHEP/api_notesnob/actions/workflows/notesnob_workflow.yml/badge.svg)
 
 ## Описание
 
@@ -66,7 +66,8 @@ git clone git@github.com:HETPAHHEP/api_notesnob.git
     DB_HOST=db
     DB_PORT=5432
     ```
-4) Занесите адрес сервера в конфигурационный файл nginx
+
+**Занесите адрес сервера в конфигурационный файл _nginx_:**
    ```bash
    cp -r api_notesnob/infra/. ~  # копирование файлов из проекта
    ```
@@ -76,6 +77,9 @@ git clone git@github.com:HETPAHHEP/api_notesnob.git
    ```
 
 **Разверните проект с помощью _Docker-compose_:**
+
+Если будет использоваться образ проекта Django c Docker Hub, то можно просто запустить нужную
+команду.
 
 ```bash
 docker-compose up
@@ -87,6 +91,7 @@ _или_
 sudo docker compose up
 ```
 
+При необходимости можно собрать и через Dockerfile, но изменив при этом docker-compose.
 
 ## Запуск команд
 
@@ -119,7 +124,7 @@ docker exec -it api_notesnob-web-1 bash  # пример
 ### Создание суперпользователя
 
 Чтобы управлять данными приложения и осуществлять наблюдения за работой проекта, необходимо
-создать суперпользователя. Он будет иметь права роли администратора и доступ к панели Django 
+создать суперпользователя. Он будет иметь права роли администратора и доступ к панели Django. 
 
 ```bash
 python manage.py createsuperuser
