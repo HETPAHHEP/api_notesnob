@@ -1,5 +1,5 @@
 # API NoteSnob
-pyth
+
 ![NoteSnob Workflow](https://github.com/HETPAHHEP/api_notesnob/actions/workflows/notesnob_workflow.yml/badge.svg)
 
 ## Описание
@@ -82,7 +82,7 @@ git clone git@github.com:HETPAHHEP/api_notesnob.git
 команду.
 
 ```bash
-docker-compose up
+sudo docker-compose up
 ```
 
 _или_
