@@ -78,18 +78,13 @@ git clone git@github.com:HETPAHHEP/api_notesnob.git
 
 **Разверните проект с помощью _Docker-compose_:**
 
-Если будет использоваться образ проекта Django c Docker Hub, то можно просто запустить нужную
-команду.
+Если будет использоваться образ проекта Django c Docker Hub, то можно просто запустить 
+следующую команду.
 
 ```bash
 sudo docker-compose up
 ```
 
-_или_
-
-```bash
-sudo docker compose up
-```
 
 При необходимости можно собрать и через Dockerfile, но изменив при этом docker-compose.
 
@@ -98,7 +93,7 @@ sudo docker compose up
 Чтобы использовать необходимые команды для проекта Django, необходимо войти в контейнер:
 
 ```bash
-docker exec -it api_notesnob-web-1 bash  # пример
+docker exec -it admin_web_1 bash  # имя для примера
 ```
 
 После чего самостоятельно или с помощью _entrypoint.sh_ сделайте миграции для базы данных
@@ -107,7 +102,7 @@ docker exec -it api_notesnob-web-1 bash  # пример
 1) Запустив скрипт
    ```bash
    cat infra/entrypoint.sh | sudo docker exec -i \
-   ilya-web-1 sh -c 'cat > entry.sh && chmod +x entry.sh && ./entry.sh'
+   admin_web_1 sh -c 'cat > entry.sh && chmod +x entry.sh && ./entry.sh'
    ```
 2) Самостоятельно
    ```bash
@@ -145,7 +140,7 @@ python manage.py start_import
 то для этого можно воспользоваться следующей командой:
 
 ```bash
-sudo docker compose down -v --rmi
+sudo docker-compose down -v --rmi
 ```
 
 ## Документация
