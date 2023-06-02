@@ -1,6 +1,6 @@
 # API NoteSnob
 
-![Notesnob Workflow Status](https://github.com/HETPAHHEP/api_notesnob/actions/workflows/notesnob_workflow.yml/badge.svg?event=push)
+![Notesnob Workflow](https://github.com/HETPAHHEP/api_notesnob/actions/workflows/notesnob_workflow.yml/badge.svg)
 
 ## Описание
 
@@ -14,6 +14,7 @@
 
 * При регистрации пользователь оправляет свои данные (username, email), после чего получает на почту
 код. Для получения JWT токена аутентификации необходимо отправить username и полученный код с почты.
+* Отправка письма происходит через SMTP сервер Яндекса.
 * Для аутентификации используется **_только Access токен_**. Если необходимо получить токен снова, 
 то для этого отправляется новый код на почту.
 
@@ -24,6 +25,7 @@
 * [Django 4.2](https://docs.djangoproject.com/en/4.2/)
 * [Django REST framework 3.14](https://www.django-rest-framework.org)
 * [PostgreSQL 15.3](https://www.postgresql.org/docs/15/release-15-3.html)
+* [Nginx](https://nginx.org/en/)
 * [Docker](https://www.docker.com)
 
 
@@ -54,6 +56,7 @@ git clone git@github.com:HETPAHHEP/api_notesnob.git
 
     ```dotenv
     EMAIL=your_sending_email
+    EMAIL_PASSWORD=your_app_password
     JWT_SECRET_KEY=your_jwt_secret_key
     DJANGO_SECRET_KEY=your_django_secret_key
     DB_ENGINE=django.db.backends.postgresql
@@ -63,6 +66,14 @@ git clone git@github.com:HETPAHHEP/api_notesnob.git
     DB_HOST=db
     DB_PORT=5432
     ```
+4) Занесите адрес сервера в конфигурационный файл nginx
+   ```bash
+   cp -r api_notesnob/infra/. ~  # копирование файлов из проекта
+   ```
+   
+   ```bash
+   nano nginx/default.conf  # редактировать настройки
+   ```
 
 **Разверните проект с помощью _Docker-compose_:**
 
@@ -70,13 +81,19 @@ git clone git@github.com:HETPAHHEP/api_notesnob.git
 docker-compose up
 ```
 
+_или_
+
+```bash
+sudo docker compose up
+```
+
 
 ## Запуск команд
 
-Чтобы использовать необходимые команды для проекта, необходимо войти в контейнер:
+Чтобы использовать необходимые команды для проекта Django, необходимо войти в контейнер:
 
 ```bash
-docker exec -it api_notesnob-web-1 bash
+docker exec -it api_notesnob-web-1 bash  # пример
 ```
 
 После чего самостоятельно или с помощью _entrypoint.sh_ сделайте миграции для базы данных
@@ -84,7 +101,8 @@ docker exec -it api_notesnob-web-1 bash
 
 1) Запустив скрипт
    ```bash
-   sh /code/infra/entrypoint.sh  # нужно запускать в code/notesnob_api/
+   cat infra/entrypoint.sh | sudo docker exec -i \
+   ilya-web-1 sh -c 'cat > entry.sh && chmod +x entry.sh && ./entry.sh'
    ```
 2) Самостоятельно
    ```bash
@@ -116,9 +134,17 @@ python manage.py createsuperuser
 python manage.py start_import
 ```
 
+### Отчистка данных
+
+Если необходимо на сервере полностью отчистить запущенные контейнеры и их зависимости,
+то для этого можно воспользоваться следующей командой:
+
+```bash
+sudo docker compose down -v --rmi
+```
 
 ## Документация
 
 Более подробные особенности работы проекта и доступные эндпоинты есть в документации:
 
-**[127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc/)**
+**[127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc/)** — эндпоинт для локальной разработки
