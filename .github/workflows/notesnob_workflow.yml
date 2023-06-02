@@ -61,8 +61,8 @@ jobs:
        passphrase: ${{ secrets.PASSPHRASE }} # ssh-ключ защищен фразой-паролем
        script: |
          # Остановка и удаление контейнера
-         sudo docker compose stop
-         sudo docker compose rm web
+         sudo docker-compose stop
+         sudo docker-compose rm -f web
          
          # Очистка файла .env перед добавлением переменных
          truncate -s 0 .env
@@ -70,7 +70,7 @@ jobs:
          # Добавление переменных в файл .env
          echo EMAIL=${{ secrets.EMAIL }} >> .env
          echo EMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }} >> .env
-         echo JWT_SECRET_KEY="${{ secrets.JWT_SECRET_KEY }}" >> .env
+         echo JWT_SECRET_KEY="${{ secrets.JWT_SECRET_KEY  >> .env
          echo DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }} >> .env
          echo DB_ENGINE=${{ secrets.DB_ENGINE }} >> .env
          echo DB_NAME=${{ secrets.DB_NAME }} >> .env
@@ -80,7 +80,7 @@ jobs:
          echo DB_PORT=${{ secrets.DB_PORT }} >> .env
          
          # Запуск контейнера
-         sudo docker compose up -d
+         sudo docker-compose up -d
   send_message:
     name: Sending a status message to Telegram
     runs-on: ubuntu-latest

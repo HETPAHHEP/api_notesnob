@@ -68,5 +68,6 @@ def send_email_with_confirmation_code(user_email, username):
             subject,
             message,
             DEFAULT_FROM_EMAIL,
-            [user_email]):
+            [user_email],
+            fail_silently=False,):
         return True
