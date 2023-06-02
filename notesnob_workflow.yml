@@ -64,7 +64,7 @@ jobs:
          sudo docker compose rm web
          touch .env 
          echo EMAIL=${{ secrets.EMAIL }} >> .env
-         echo JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }} >> .env
+         echo JWT_SECRET_KEY="${{ secrets.JWT_SECRET_KEY }}" >> .env
          echo DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }} >> .env
          echo DB_ENGINE=${{ secrets.DB_ENGINE }} >> .env
          echo DB_NAME=${{ secrets.DB_NAME }} >> .env
