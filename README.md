@@ -1,6 +1,4 @@
-# API NoteSnob
-
-![NoteSnob Workflow](https://github.com/HETPAHHEP/api_notesnob/actions/workflows/notesnob_workflow.yml/badge.svg)
+# API NoteSnob ![NoteSnob Workflow](https://github.com/HETPAHHEP/api_notesnob/actions/workflows/notesnob_workflow.yml/badge.svg)
 
 ## Описание
 
