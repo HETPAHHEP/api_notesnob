@@ -32,7 +32,7 @@ class RegisterUserSerializer(serializers.Serializer):
         if not CustomUser.objects.filter(email=email).exists() and \
                 CustomUser.objects.filter(username=username).exists():
             raise serializers.ValidationError(
-                detail={'email': 'Пользователь с таким username уже существует'})
+                detail={'username': 'Пользователь с таким username уже существует'})
 
         return attrs
 
