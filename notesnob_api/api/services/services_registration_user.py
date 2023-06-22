@@ -7,7 +7,7 @@ from .services_email_code import (send_email_with_confirmation_code,
 def _create_new_user(email, username):
     """Создание нового пользователя"""
     if not CustomUser.objects.filter(email=email, username=username).exists():
-        CustomUser.objects.create(email=email, username=username)
+        CustomUser.objects.create_user(email=email, username=username)
 
 
 def start_registration(email, username):
