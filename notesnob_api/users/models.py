@@ -1,6 +1,7 @@
-from api.validators import UsernameValidator
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+
+from api.validators import UsernameValidator
 
 
 class CustomUser(AbstractUser):

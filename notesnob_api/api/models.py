@@ -1,5 +1,6 @@
-from api.validators import UsernameValidator
 from django.db import models
+
+from api.validators import UsernameValidator
 
 CONFIRMATION_CODE_LENGTH = 14
 
