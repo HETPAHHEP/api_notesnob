@@ -1,6 +1,6 @@
 # API NoteSnob ![NoteSnob Workflow](https://github.com/HETPAHHEP/api_notesnob/actions/workflows/notesnob_workflow.yml/badge.svg)
 
-## Описание
+### Описание
 
 Проект NoteSnob представляет собой базу отзывов о фильмах, книгах и музыке.
 
@@ -8,114 +8,129 @@
 Из оценок обзоров формируется средний рейтинг произведения. 
 Другие пользователи могут оставлять свои комментарии на рецензии.
 
-## Технические особенности
+### 🔍 Технические особенности
 
 * При регистрации пользователь оправляет свои данные (username, email), после чего получает на почту
-код. Для получения JWT токена аутентификации необходимо отправить username и полученный код с почты.
-* Отправка письма происходит через SMTP сервер Яндекса.
+код. 
+* Для получения JWT токена аутентификации необходимо отправить username и полученный код с почты.
 * Для аутентификации используется **_только Access токен_**. Если необходимо получить токен снова, 
 то для этого отправляется новый код на почту.
 
 
-## Использованные технологии
+### 👨‍💻 Использованные технологии
 
-* [Python 3.11](https://www.python.org/downloads/release/python-3110/)
-* [Django 4.2](https://docs.djangoproject.com/en/4.2/)
-* [Django REST framework 3.14](https://www.django-rest-framework.org)
-* [PostgreSQL 15.3](https://www.postgresql.org/docs/15/release-15-3.html)
-* [Nginx](https://nginx.org/en/)
-* [Docker](https://www.docker.com)
+[![Python][Python-badge]][Python-url]
+[![Django REST][DRF-badge]][DRF-url]
+[![PostgreSQL][Postgres-badge]][Postgres-url]
+[![Nginx][Nginx-badge]][Nginx-url]
+[![Docker][Docker-badge]][Docker-url]
+[![Yandex-Cloud][Yandex-Cloud-badge]][Yandex-Cloud-url]
+[![Github-Actions][Github-Actions-badge]][Github-Actions-url]
+
+## ⚙ Начало Работы
+
+Чтобы запустить копию проекта, следуйте инструкциям ниже.
 
 
-## Запуск через Docker
+### 🚀 Запуск на сервере
 
-**Клонируйте данный проект:**
+1. **Обновите пакеты**
+   
+   ```bash
+   sudo apt-get update
+   sudo apt-get upgrade
+   ```
 
-```bash
-git clone git@github.com:HETPAHHEP/api_notesnob.git
-```
+2. **Установите docker compose**
+   
+   ```bash
+   sudo apt-get install docker.io
+   sudo apt-get install docker-compose
+   ```
 
-**Создайте _dotenv-файл_ и занесите необходимые переменные:**
+3. **Перенесите необходимые файлы**
+   
+   ```bash
+   scp docker-compose.yml <username>@<host>:/home/<username>/
+   scp nginx.conf <username>@<host>:/home/<username>/
+   scp -r docs/ <username>@<host>:/home/<username>/docs/
+   ```
 
-1) Создание секретного ключа JWT
+4. **Создайте *dotenv-файл***
+
+   ```bash
+   touch .env
+   ```
+
+   ```dotenv
+   EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+   EMAIL_HOST=your.email.host
+   EMAIL_PORT=555
+   EMAIL=your@email.com
+   EMAIL_PASSWORD=your-sending-email-password
+   DJANGO_SECRET_KEY=your-django-secret
+   DB_ENGINE=django.db.backends.postgresql
+   DB_NAME=postgres
+   POSTGRES_USER=postgres
+   POSTGRES_PASSWORD=password_here
+   DB_HOST=host_here
+   DB_PORT=5432
+   ALLOWED_HOSTS=localhost;127.0.0.1;backend;yourhost
+   ```
+   ###### *Создание секретного ключа JWT*
 
     ```bash
     openssl rand -hex 32
     ```
+   
+   ###### *Секретный ключ Django можно сгенерировать [тут](https://djecrety.ir/)*
 
-2) Создание секретного ключа Django
+5. **Добавьте адрес в конфиг nginx**
 
-    ```bash
-    ./manage.py shell -c "from django.core.management import utils; 
-    print('django-insecure-' + utils.get_random_secret_key())"
-    ```
-
-3) Занесите переменные для проекта и своей базы данных _PostgreSQL_
-
-    ```dotenv
-    EMAIL=your_sending_email
-    EMAIL_PASSWORD=your_app_password
-    JWT_SECRET_KEY=your_jwt_secret_key
-    DJANGO_SECRET_KEY=your_django_secret_key
-    DB_ENGINE=django.db.backends.postgresql
-    DB_NAME=postgres
-    POSTGRES_USER=postgres
-    POSTGRES_PASSWORD=password_here
-    DB_HOST=db
-    DB_PORT=5432
-    ```
-
-**Занесите адрес сервера в конфигурационный файл _nginx_:**
-   ```bash
-   cp -r api_notesnob/infra/. ~  # копирование файлов из проекта
+   ```nginx
+   server {
+    listen 80;
+    server_tokens off;
+    server_name yourhost;
    ```
+
+6. **Запустите контейнеры**
+
+   ```bash
+   sudo docker-compose up
+   ```  
+
+7. **Завершите настройку Django**
+
+   _Чтобы использовать необходимые команды для проекта Django, необходимо выполнять их 
+   в нужном контейнере:_
    
    ```bash
-   nano nginx/default.conf  # редактировать настройки
+   docker exec -it admin_web_1 bash  # имя для примера
    ```
 
-**Разверните проект с помощью _Docker-compose_:**
-
-Если будет использоваться образ проекта Django c Docker Hub, то можно просто запустить 
-следующую команду.
-
-```bash
-sudo docker-compose up
-```
+   _Вы можете самостоятельно или с помощью **_entrypoint.sh_** сделать миграции для базы данных
+   и собрать статику проекта:_
 
 
-При необходимости можно собрать и через Dockerfile, но изменив при этом docker-compose.
-
-## Запуск команд
-
-Чтобы использовать необходимые команды для проекта Django, необходимо выполнять их 
-в нужном контейнере:
-
-```bash
-docker exec -it admin_web_1 bash  # имя для примера
-```
-
-Вы можете самостоятельно или с помощью _entrypoint.sh_ сделать миграции для базы данных
-и собрать статику проекта:
-
-1) Запустив скрипт
-   ```bash
-   cat infra/entrypoint.sh | sudo docker exec -i \
-   admin_web_1 sh -c 'cat > entry.sh && chmod +x entry.sh && ./entry.sh'
-   ```
-2) Самостоятельно в контейнере _web_
-   ```bash
-   python manage.py migrate --no-input
-   ```
+   - Запустив скрипт
+      ```bash
+      cat infra/entrypoint.sh | sudo docker exec -i \
+      admin_web_1 sh -c 'cat > entry.sh && chmod +x entry.sh && ./entry.sh'
+      ```
+   - Самостоятельно в контейнере _web_
+      ```bash
+      python manage.py migrate --no-input
+      ```
    
-   ```bash
-   python manage.py collectstatic --no-input --clear
-   ```
+      ```bash
+      python manage.py collectstatic --no-input --clear
+      ```
 
 
 ---
 
-### Создание суперпользователя
+### 💪 Создание суперпользователя
 
 Чтобы управлять данными приложения и осуществлять наблюдения за работой проекта, необходимо
 создать суперпользователя. Он будет иметь права роли администратора и доступ к панели Django. 
@@ -124,7 +139,7 @@ docker exec -it admin_web_1 bash  # имя для примера
 python manage.py createsuperuser
 ```
 
-### Данные для тестирования
+### 📇 Данные для тестирования
 
 Для удобной проверки доступны данные в CSV. Чтобы их импортировать в базу данных,
 используйте данную команду в контейнере _web_:
@@ -133,7 +148,7 @@ python manage.py createsuperuser
 python manage.py start_import
 ```
 
-### Отчистка данных
+### 🗑 Отчистка данных
 
 Если необходимо на сервере полностью отчистить запущенные контейнеры и их зависимости,
 то для этого можно воспользоваться следующей командой:
@@ -142,8 +157,48 @@ python manage.py start_import
 sudo docker-compose down -v --rmi
 ```
 
-## Документация
+### 📖 API (Docs: [OpenAPI](notesnob_api/static/redoc_notesnob.yaml))
 
-Более подробные особенности работы проекта и доступные эндпоинты есть в документации:
+Документация доступна по ссылке: http://localhost/redoc
 
-**[127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc/)** — эндпоинт для локальной работы
+   ###### **Локальный эндпоинт*
+
+
+---
+
+<h5 align="center">
+Автор проекта: <a href="https://github.com/HETPAHHEP">HETPAHHEP</a>
+</h5>
+
+<!-- MARKDOWN BADGES & URLs -->
+[Python-badge]: https://img.shields.io/badge/Python-4db8ff?style=for-the-badge&logo=python&logoColor=%23ffeb3b
+
+[Python-url]: https://www.python.org/
+
+[Gunicorn-badge]: https://img.shields.io/badge/gunicorn-%298729.svg?style=for-the-badge&logo=gunicorn&logoColor=white
+
+[Gunicorn-url]: https://gunicorn.org/
+
+[Postgres-badge]: https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white
+
+[Postgres-url]: https://www.postgresql.org/
+
+[Docker-badge]: https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white
+
+[Docker-url]: https://www.docker.com/
+
+[Nginx-badge]: https://img.shields.io/badge/nginx-%23009639.svg?style=for-the-badge&logo=nginx&logoColor=white
+
+[Nginx-url]: https://nginx.org
+
+[DRF-badge]: https://img.shields.io/badge/Django_REST-f44336?style=for-the-badge&logo=django
+
+[DRF-url]: https://www.django-rest-framework.org
+
+[Yandex-Cloud-badge]: https://img.shields.io/badge/Yandex_Cloud-white?style=for-the-badge
+
+[Yandex-Cloud-url]: https://cloud.yandex.ru
+
+[Github-Actions-badge]: https://img.shields.io/badge/Github_Actions-%239c27b0?style=for-the-badge&logo=github%20actions&logoColor=white
+
+[Github-Actions-url]: https://github.com/features/actions
